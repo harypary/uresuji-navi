@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="intro">
+  <h1>{{ site.title }}</h1>
+  <p>{{ site.description }}</p>
+  <p class="updated">最終更新: {{ now.strftime('%Y年%m月%d日 %H:%M') }}（毎日自動更新）</p>
+</section>
+
+{% for genre_name, group in grouped %}
+<section class="genre-block">
+  <h2>{{ genre_name }}</h2>
+  <div class="card-grid">
+    {% for article in group %}
+    <a class="article-card" href="{{ root }}{{ article.url_path }}">
+      {% if article.hero_image %}
+      <img src="{{ article.hero_image }}" alt="" loading="lazy" width="300" height="300">
+      {% endif %}
+      <div class="article-card-body">
+        <h3>{{ article.title }}</h3>
+        <p>{{ article.products|length }}商品を掲載 ・ {{ article.updated_at.strftime('%m/%d') }}更新</p>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+{% endblock %}

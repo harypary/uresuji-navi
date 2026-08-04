@@ -1,0 +1,225 @@
+:root {
+  --bf: #bf0000;          /* 楽天カラー系のアクセント */
+  --bf-dark: #8f0000;
+  --ink: #1c1c1e;
+  --ink-sub: #6b6b70;
+  --line: #e6e6ea;
+  --bg: #fbfbfd;
+  --card: #ffffff;
+  --radius: 12px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP",
+               "Yu Gothic", Meiryo, sans-serif;
+  line-height: 1.75;
+  -webkit-text-size-adjust: 100%;
+}
+
+a { color: inherit; }
+
+main {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 0 16px 64px;
+}
+
+/* --- 法定表示バナー ------------------------------------------------ */
+.pr-notice {
+  background: #f4f4f6;
+  color: var(--ink-sub);
+  font-size: 12px;
+  text-align: center;
+  padding: 7px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+/* --- ヘッダー / フッター -------------------------------------------- */
+.site-header {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 24px 16px 16px;
+}
+.brand {
+  font-size: 22px;
+  font-weight: 800;
+  text-decoration: none;
+  letter-spacing: .02em;
+}
+.tagline {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--ink-sub);
+}
+
+.site-footer {
+  border-top: 1px solid var(--line);
+  padding: 28px 16px 48px;
+  font-size: 13px;
+  color: var(--ink-sub);
+  text-align: center;
+}
+.site-footer nav { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-bottom: 14px; }
+.site-footer .note { max-width: 620px; margin: 0 auto 10px; font-size: 12px; }
+.site-footer .copyright { font-size: 12px; }
+
+/* --- トップページ ---------------------------------------------------- */
+.intro h1 { font-size: 26px; margin: 16px 0 8px; }
+.updated { font-size: 12px; color: var(--ink-sub); margin: 0 0 20px; }
+
+.genre-block { margin: 40px 0; }
+.genre-block h2 {
+  font-size: 18px;
+  border-left: 4px solid var(--bf);
+  padding-left: 10px;
+  margin-bottom: 16px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+.article-card {
+  display: block;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  text-decoration: none;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.article-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.08);
+}
+.article-card img {
+  width: 100%;
+  height: 160px;
+  object-fit: contain;
+  background: #fff;
+  display: block;
+  padding: 10px;
+}
+.article-card-body { padding: 12px 14px 16px; }
+.article-card-body h3 { font-size: 15px; margin: 0 0 6px; line-height: 1.5; }
+.article-card-body p { margin: 0; font-size: 12px; color: var(--ink-sub); }
+
+/* --- 記事ページ ------------------------------------------------------ */
+article h1 { font-size: 25px; line-height: 1.45; margin: 20px 0 8px; }
+.lead {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  font-size: 15px;
+  margin: 16px 0 28px;
+}
+
+.toc {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 36px;
+}
+.toc h2 { font-size: 15px; margin: 0 0 8px; }
+.toc ol { margin: 0; padding-left: 1.3em; font-size: 14px; }
+.toc li { margin: 4px 0; }
+.toc a { color: #0b57d0; text-decoration: none; }
+.toc a:hover { text-decoration: underline; }
+
+.item {
+  position: relative;
+  display: flex;
+  gap: 18px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px 20px 20px;
+  margin-bottom: 20px;
+  scroll-margin-top: 16px;
+}
+.rank {
+  position: absolute;
+  top: -10px;
+  left: -8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--bf);
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.2);
+}
+.item-image { flex: 0 0 160px; }
+.item-image img {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 8px;
+}
+.item-body { flex: 1; min-width: 0; }
+.item-body h3 { font-size: 16px; margin: 0 0 10px; line-height: 1.55; }
+.item-body h3 a { text-decoration: none; }
+.item-body h3 a:hover { text-decoration: underline; }
+
+.meta { margin: 0 0 10px; font-size: 13px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.price { font-size: 20px; font-weight: 800; color: var(--bf); }
+.stars { color: #f5a623; letter-spacing: 1px; }
+.review-count { color: var(--ink-sub); font-size: 12px; }
+
+.caption { font-size: 13px; color: var(--ink-sub); margin: 0 0 8px; }
+.shop { font-size: 12px; color: var(--ink-sub); margin: 0 0 14px; }
+
+/* CTA: ここのクリック率がそのまま収益になるので目立たせる */
+.cta {
+  display: inline-block;
+  background: linear-gradient(180deg, #d40000, var(--bf-dark));
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  text-decoration: none;
+  padding: 12px 26px;
+  border-radius: 999px;
+  box-shadow: 0 3px 0 rgba(0,0,0,.18);
+}
+.cta:hover { filter: brightness(1.08); }
+.cta:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+
+.related {
+  margin-top: 44px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 22px;
+}
+.related h2 { font-size: 16px; margin: 0 0 10px; }
+.related ul { margin: 0; padding-left: 1.2em; font-size: 14px; }
+.related li { margin: 6px 0; }
+.related a { color: #0b57d0; text-decoration: none; }
+.related a:hover { text-decoration: underline; }
+
+/* --- 固定ページ ------------------------------------------------------ */
+.static-page h1 { font-size: 24px; }
+.static-page h2 { font-size: 17px; margin-top: 32px; border-left: 4px solid var(--bf); padding-left: 10px; }
+.static-page p { font-size: 14px; }
+
+/* --- スマホ ---------------------------------------------------------- */
+@media (max-width: 600px) {
+  .item { flex-direction: column; gap: 14px; padding: 24px 16px 20px; }
+  .item-image { flex: none; align-self: center; }
+  .item-image img { width: 200px; height: 200px; }
+  .cta { display: block; text-align: center; padding: 14px; }
+  article h1 { font-size: 21px; }
+  .card-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+}

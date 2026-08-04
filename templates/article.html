@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title }} | {{ site.title }}{% endblock %}
+{% block description %}{{ article.description }}{% endblock %}
+{% block canonical %}{{ base_url }}/{{ article.url_path }}{% endblock %}
+{% block og_image %}<meta property="og:image" content="{{ article.hero_image }}">{% endblock %}
+
+{% block content %}
+<article>
+  <h1>{{ article.title }}</h1>
+  <p class="updated">{{ article.updated_at.strftime('%Y年%m月%d日') }}更新 ・ {{ article.genre_name }}</p>
+  <p class="lead">{{ article.lead }}</p>
+
+  <nav class="toc">
+    <h2>掲載商品</h2>
+    <ol>
+      {% for p in article.products %}
+      <li><a href="#item-{{ loop.index }}">{{ p.name|truncate(48, true, '…') }}</a></li>
+      {% endfor %}
+    </ol>
+  </nav>
+
+  {% for p in article.products %}
+  <section class="item" id="item-{{ loop.index }}">
+    <div class="rank">{{ loop.index }}</div>
+
+    <a class="item-image" href="{{ p.url }}" rel="nofollow sponsored noopener" target="_blank">
+      <img src="{{ p.image }}" alt="{{ p.name|truncate(60, true, '') }}" loading="lazy" width="300" height="300">
+    </a>
+
+    <div class="item-body">
+      <h3>
+        <a href="{{ p.url }}" rel="nofollow sponsored noopener" target="_blank">{{ p.name }}</a>
+      </h3>
+
+      <p class="meta">
+        <span class="price">{{ p.price_display }}</span>
+        {% if p.review_count %}
+        <span class="stars" title="{{ p.review_average }} / 5">
+          {%- for i in range(5) %}{{ '★' if i < p.review_average|round(0, 'common')|int else '☆' }}{% endfor -%}
+        </span>
+        <span class="review-count">{{ p.review_count }}件のレビュー</span>
+        {% endif %}
+      </p>
+
+      {% if p.short_caption %}<p class="caption">{{ p.short_caption }}</p>{% endif %}
+      {% if p.shop %}<p class="shop">ショップ: {{ p.shop }}</p>{% endif %}
+
+      <a class="cta" href="{{ p.url }}" rel="nofollow sponsored noopener" target="_blank">
+        楽天市場で価格を見る
+      </a>
+    </div>
+  </section>
+  {% endfor %}
+
+  {% if related %}
+  <section class="related">
+    <h2>あわせて読みたい</h2>
+    <ul>
+      {% for r in related %}
+      <li><a href="{{ root }}{{ r.url_path }}">{{ r.title }}</a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</article>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": {{ article.title|tojson }},
+  "itemListElement": [
+    {% for p in article.products %}
+    {
+      "@type": "ListItem",
+      "position": {{ loop.index }},
+      "item": {
+        "@type": "Product",
+        "name": {{ p.name|tojson }},
+        "image": {{ p.image|tojson }},
+        "offers": {
+          "@type": "Offer",
+          "price": {{ p.price }},
+          "priceCurrency": "JPY",
+          "url": {{ p.url|tojson }}
+        }{% if p.review_count %},
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": {{ p.review_average }},
+          "reviewCount": {{ p.review_count }}
+        }{% endif %}
+      }
+    }{{ "," if not loop.last }}
+    {% endfor %}
+  ]
+}
+</script>
+{% endblock %}

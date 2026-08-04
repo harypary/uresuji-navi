@@ -1,0 +1,61 @@
+name: 毎日サイトを自動更新
+
+on:
+  schedule:
+    # UTC 21:00 = JST 6:00。売れ筋ランキングが前日分で確定した頃に回す
+    - cron: "0 21 * * *"
+  workflow_dispatch: {}   # 手動実行用
+  push:
+    branches: [main]
+    paths:
+      - "config/**"
+      - "templates/**"
+      - "static/**"
+      - "src/**"
+      - "main.py"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 前の実行が走っている最中に次が始まるとデプロイが競合する
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: 楽天APIから記事を生成
+        env:
+          RAKUTEN_APPLICATION_ID: ${{ secrets.RAKUTEN_APPLICATION_ID }}
+          RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}
+          RAKUTEN_AFFILIATE_ID: ${{ secrets.RAKUTEN_AFFILIATE_ID }}
+          SITE_BASE_URL: ${{ vars.SITE_BASE_URL }}
+        run: python main.py
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

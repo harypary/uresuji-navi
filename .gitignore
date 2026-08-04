@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/
+data/cache/
+logs/
+
+# ビルド生成物。GitHub Actions が毎回作り直して Pages へ直接デプロイするため
+# リポジトリには含めない（Pages の Source は "GitHub Actions" を選択すること）
+docs/

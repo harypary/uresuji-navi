@@ -1,0 +1,87 @@
+# ============================================================
+# サイト全体の設定
+# ============================================================
+site:
+  title: "売れ筋ナビ"
+  tagline: "楽天市場で今いちばん売れているものを、毎日自動で追いかける"
+  description: "楽天市場のリアルタイム売れ筋データをもとに、カテゴリ別の人気ランキングを毎日更新しています。"
+  author: "売れ筋ナビ編集部"
+  lang: "ja"
+
+# 記事生成の共通パラメータ
+generation:
+  items_per_article: 10        # 1記事あたりの掲載商品数
+  min_review_count: 3          # レビュー件数がこれ未満の商品は除外(信頼性)
+  # 2026年の刷新でランキングAPIは realtime のみになった。
+  # daily / weekly / monthly は 400 wrong_parameter で弾かれる
+  ranking_period: "realtime"
+  request_interval_sec: 1.2    # 楽天APIへの最短リクエスト間隔(規約上1req/sec目安)
+
+# ============================================================
+# 攻めるジャンル定義
+#   genre_id は楽天市場のジャンルID。
+#   確認方法: python -m src.genres <検索したい語> (README参照)
+#   commission_rate は楽天アフィリエイトの料率(%)。売上予測の重み付けに使う。
+# ============================================================
+genres:
+  - slug: kaden-kitchen
+    name: キッチン家電
+    genre_id: 100644
+    commission_rate: 2.0
+    keywords: [電気ケトル, ホットサンドメーカー, 電気圧力鍋]
+
+  - slug: beauty-skincare
+    name: スキンケア
+    genre_id: 100944
+    commission_rate: 4.0
+    keywords: [化粧水, 美容液, 日焼け止め]
+
+  - slug: food-sweets
+    name: スイーツ・お菓子
+    genre_id: 551167
+    commission_rate: 4.0
+    keywords: [お取り寄せスイーツ, チョコレート, プリン]
+
+  - slug: pc-peripheral
+    name: マウス・キーボード
+    genre_id: 303087
+    commission_rate: 2.0
+    keywords: [ワイヤレスマウス, ゲーミングキーボード, トラックボール]
+
+  - slug: interior-storage
+    name: インテリア・寝具・収納
+    genre_id: 100804
+    commission_rate: 3.0
+    keywords: [収納ボックス, デスクライト, ラグ]
+
+  - slug: sports-outdoor
+    name: スポーツ・アウトドア
+    genre_id: 101070
+    commission_rate: 3.0
+    keywords: [ヨガマット, キャンプチェア, ランニングシューズ]
+
+# ============================================================
+# 記事の「切り口」。genres × angles の数だけ記事が生成される。
+#   source: ranking = 楽天ランキングAPI / search = 商品検索API
+# ============================================================
+angles:
+  - slug: ranking
+    title: "{genre}の人気ランキングTOP{n}"
+    lead: "楽天市場で今いちばん売れている{genre}を、リアルタイムの売上データから{n}個ピックアップしました。"
+    source: ranking
+    sort: null
+
+  - slug: review
+    title: "{genre}のレビュー高評価{n}選"
+    lead: "実際に買った人の評価が高い{genre}だけを集めました。レビュー件数と平均評価の両方が高いものを優先しています。"
+    source: search
+    sort: "-reviewCount"
+
+  - slug: cospa
+    title: "コスパ重視で選ぶ{genre}{n}選"
+    lead: "価格を抑えつつ、レビュー評価もしっかり付いている{genre}を厳選しました。"
+    source: search
+    sort: "+itemPrice"
+    # 価格昇順だと数百円の小物や付属品ばかり拾ってしまい、
+    # レビュー条件で全滅して記事が空になる。API側で下限を切っておく
+    min_price: 1500
