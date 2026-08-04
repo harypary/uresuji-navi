@@ -12,6 +12,10 @@
 <meta property="og:description" content="{{ self.description() }}">
 {% block og_image %}{% endblock %}
 <link rel="alternate" type="application/rss+xml" title="{{ site.title }}" href="{{ base_url }}/feed.xml">
+{% if google_site_verification %}
+<!-- Google Search Console の所有権確認。確認後も消さないこと(消すと所有権が外れる) -->
+<meta name="google-site-verification" content="{{ google_site_verification }}">
+{% endif %}
 <link rel="stylesheet" href="{{ root }}assets/style.css">
 </head>
 <body>

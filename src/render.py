@@ -53,13 +53,24 @@ def _related(article: Article, articles: list[Article], limit: int = 5) -> list[
     return (same + rotated)[:limit]
 
 
-def render_site(articles: list[Article], cfg: dict, base_url: str, out_dir: Path) -> None:
+def render_site(
+    articles: list[Article],
+    cfg: dict,
+    base_url: str,
+    out_dir: Path,
+    google_site_verification: str = "",
+) -> None:
     env = _env()
     site = cfg["site"]
     now = datetime.now(JST)
     base_url = base_url.rstrip("/")
 
-    ctx = {"site": site, "base_url": base_url, "now": now}
+    ctx = {
+        "site": site,
+        "base_url": base_url,
+        "now": now,
+        "google_site_verification": google_site_verification,
+    }
 
     # 出力先をまっさらにする。設定から外したジャンルの記事を残さないため。
     # docs/ 配下は毎回生成物で埋め直すので、手書きファイルは置かないこと。

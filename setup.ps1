@@ -103,6 +103,12 @@ gh secret set RAKUTEN_APPLICATION_ID --body $envVars["RAKUTEN_APPLICATION_ID"] -
 gh secret set RAKUTEN_ACCESS_KEY     --body $envVars["RAKUTEN_ACCESS_KEY"]     --repo "$owner/$repo"
 gh secret set RAKUTEN_AFFILIATE_ID   --body $envVars["RAKUTEN_AFFILIATE_ID"]   --repo "$owner/$repo"
 gh variable set SITE_BASE_URL --body $siteUrl --repo "$owner/$repo"
+
+# Search Console の確認トークンは公開metaタグに出る値なので Secret ではなく Variable
+if ($envVars["GOOGLE_SITE_VERIFICATION"]) {
+    gh variable set GOOGLE_SITE_VERIFICATION --body $envVars["GOOGLE_SITE_VERIFICATION"] --repo "$owner/$repo"
+    Ok "Search Console の確認トークンを登録"
+}
 Ok "アフィリエイトIDはSecretとして保存（リポジトリ上では非公開）"
 
 # ---- 6. Pages を有効化 --------------------------------------

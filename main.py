@@ -78,7 +78,13 @@ def main() -> int:
         logging.error("記事が1本も生成できませんでした。config/site.yaml を確認してください。")
         return 1
 
-    render_site(articles, cfg, base_url, args.out)
+    render_site(
+        articles,
+        cfg,
+        base_url,
+        args.out,
+        google_site_verification=os.getenv("GOOGLE_SITE_VERIFICATION", ""),
+    )
     print(f"\n✅ {len(articles)}本の記事を {args.out} に生成しました")
     print(f"   ローカル確認: python -m http.server -d {args.out} 8000")
     return 0

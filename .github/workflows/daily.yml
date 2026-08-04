@@ -43,6 +43,8 @@ jobs:
           RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}
           RAKUTEN_AFFILIATE_ID: ${{ secrets.RAKUTEN_AFFILIATE_ID }}
           SITE_BASE_URL: ${{ vars.SITE_BASE_URL }}
+          # 公開ページのmetaタグに出る値なので Secret ではなく Variable でよい
+          GOOGLE_SITE_VERIFICATION: ${{ vars.GOOGLE_SITE_VERIFICATION }}
         run: python main.py
 
       - uses: actions/configure-pages@v5
