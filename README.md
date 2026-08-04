@@ -72,13 +72,13 @@ main.py                  パイプライン全体の入口
 報酬振込先の設定を伴うため、本人が行う必要があり自動化できません。
 IDさえ手に入れば、以降は `.\setup.ps1` 一発で公開まで終わります。
 
-### 3-1. 楽天のIDを2つ取得する（10分・ここだけ手作業）
+### 3-1. 楽天の認証情報を取得する（10分・ここだけ手作業）
 
-**① アプリID (applicationId)** — 商品データを取るためのAPIキー
+**① アプリを申請する**
 
 1. https://webservice.rakuten.co.jp/ に楽天会員でログイン
 2. 「新規申請登録」から以下の内容で申請する
-3. 発行された **applicationId**（19桁の数字）を控える
+3. ステータスが「アクティブ」になるのを待つ
 
 | 項目 | 値 |
 |---|---|
@@ -101,12 +101,23 @@ IDさえ手に入れば、以降は `.\setup.ps1` 一発で公開まで終わり
 データベースへの蓄積や再配布は行いません。
 ```
 
-**② アフィリエイトID** — 報酬を自分に紐付けるためのID
+**② 管理画面から3つの値を控える**
 
-1. https://affiliate.rakuten.co.jp/ にログイン（登録は無料・審査なし）
-2. 「アフィリエイトID」を確認（`xxxxxxxx.xxxxxxxx.xxxxxxxx.xxxxxxxx` 形式）
+申請が「アクティブ」になると、アプリの詳細画面に以下が表示されます。
+**この3つすべてが必要**です。
 
-> ⚠️ アフィリエイトIDが未設定だとリンクは生成されますが**成果が1円も付きません**。
+| 画面の表示 | `.env` のキー | 形式 |
+|---|---|---|
+| アプリケーションID | `RAKUTEN_APPLICATION_ID` | UUID（`0f6d4c40-....`） |
+| **アクセスキー**（伏字） | `RAKUTEN_ACCESS_KEY` | 46文字のトークン |
+| アフィリエイトID | `RAKUTEN_AFFILIATE_ID` | `xxxxxxxx.xxxxxxxx.xxxxxxxx.xxxxxxxx` |
+
+> ⚠️ **2026年のインフラ刷新で認証方式が変わりました。**
+> 以前の「19桁の数字1つ（applicationId）」ではなく、
+> **applicationId と accessKey の2点セット**が必須です。
+> 片方だけだと `400 {"error":"wrong_parameter"}` で弾かれます。
+
+> ⚠️ アフィリエイトIDが未設定だと `affiliateUrl` が**空で返り、成果が1円も付きません**。
 > `main.py` は未設定のとき起動を止めるようにしてあります。
 
 ### 3-2. ローカルで動かす
@@ -119,7 +130,7 @@ python main.py --demo
 python -m http.server -d docs 8000     # → http://localhost:8000
 
 # 本番データで生成
-copy .env.example .env                  # .env に取得した2つのIDを記入
+copy .env.example .env                  # .env に取得した3つの値を記入
 python main.py
 ```
 
@@ -127,16 +138,19 @@ python main.py
 
 ```powershell
 python -m src.genres          # 大ジャンル一覧
-python -m src.genres 100026   # そのジャンルの子ジャンル一覧
+python -m src.genres 100939   # そのジャンルの子ジャンル一覧
 ```
 
 ### 3-3. GitHub Pages で自動運用する（1コマンド）
 
-`.env` に2つのIDを記入したら、あとは全自動です。
+`.env` に3つの値を記入したら、あとは全自動です。
 
 ```powershell
-.\setup.ps1
+.\setup.ps1 -RepoName uresuji-navi
 ```
+
+`-RepoName` はそのまま公開URLになります。楽天の商標に類似する名前
+（`rakuten` を含むもの）はスクリプトが検査して停止します。
 
 [setup.ps1](setup.ps1) が以下をまとめて実行します。
 
@@ -153,7 +167,7 @@ python -m src.genres 100026   # そのジャンルの子ジャンル一覧
 自動で回り、サイトが更新され続けます。手動で回したいときは `gh workflow run daily.yml`。
 
 > **手動で設定したい場合**: Settings → Secrets and variables → Actions で
-> `RAKUTEN_APPLICATION_ID` / `RAKUTEN_AFFILIATE_ID` を Secret に、
+> `RAKUTEN_APPLICATION_ID` / `RAKUTEN_ACCESS_KEY` / `RAKUTEN_AFFILIATE_ID` を Secret に、
 > `SITE_BASE_URL` を Variable に登録し、Settings → Pages の Source を
 > 「GitHub Actions」にすれば同じ状態になります。
 
@@ -194,7 +208,43 @@ python -m src.genres 100026   # そのジャンルの子ジャンル一覧
 
 ---
 
-## 6. 次の一手（未実装）
+## 6. ハマりどころ（2026年API刷新の実測メモ）
+
+公式ドキュメントに散らばっている情報を、実際に叩いて確認した結果です。
+
+**エンドポイントはAPIごとにパスの第1階層が違う**（[rakuten.py](src/rakuten.py)）
+
+| API | URL | 版 |
+|---|---|---|
+| 商品検索 | `openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/` | `20260701` |
+| ランキング | `openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/` | `20220601` |
+| ジャンル検索 | `openapi.rakuten.co.jp/ichibagt/api/IchibaGenre/Search/` | `20260701` |
+
+旧 `app.rakuten.co.jp/services/api/...` は2026-05-13に停止済みです。
+
+**ランキングAPIの `period` は `realtime` のみ**
+`daily` / `weekly` / `monthly` は `400 set period from realtime` で弾かれます。
+
+**ジャンル検索のレスポンス構造が変わった**
+`children[].child.genreName` → `children[].nameJa` にフラット化されています。
+
+**ジャンルIDを間違えても200が返る** ← 最も危険
+存在するIDなら別ジャンルでも正常応答するため、設定ミスに気づけません。
+実際に開発中、`216131` をスキンケアのつもりで指定して「バッグ・小物」の商品が
+並んでいました。対策として、ランキングAPIのレスポンスに含まれる `title` と
+`config/site.yaml` の `name` を突き合わせ、不一致なら警告を出しています
+（[rakuten.py](src/rakuten.py) の `ranking()`）。追加のAPIコールは発生しません。
+
+ジャンルIDを調べ直すときは `python -m src.genres <親ID>` を使ってください。
+
+**料率はAPIが返す** — `affiliateRate` に商品ごとの実料率が入るため、
+`config/site.yaml` の `commission_rate` より優先して使っています
+（[curate.py](src/curate.py)）。設定値はAPIが返さなかった場合のフォールバックです。
+
+**レート制限は厳しい** — 連続で叩くとすぐ429が返ります。
+1.2秒間隔＋指数バックオフで再試行しています。
+
+## 7. 次の一手（未実装）
 
 - **IndexNow 対応** — Bing/Yandex に更新を即時通知。毎日更新サイトとは相性が良い
 - **Google Analytics / Microsoft Clarity** — どのCTAが押されているかの計測
