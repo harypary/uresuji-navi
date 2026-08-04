@@ -59,6 +59,16 @@ class Product:
         return text[:120] + "…" if len(text) > 120 else text
 
 
+def _is_safe_url(url: str) -> bool:
+    """href/src に出して安全なURLか。
+
+    HTMLエスケープはスキームを検証しないため、`javascript:alert(1)` のような値は
+    エスケープを通り抜けてそのまま href に載る。APIレスポンスは外部入力なので、
+    http/https 以外は受け付けない。
+    """
+    return url.lower().startswith(("https://", "http://"))
+
+
 def _to_product(raw: dict) -> Product | None:
     """APIの生アイテムを Product に変換する。想定外の形なら None。"""
     # 検索APIは {"Item": {...}}、ランキングAPIも同形だが将来の差異に備えて剥がす
@@ -66,7 +76,7 @@ def _to_product(raw: dict) -> Product | None:
 
     name = item.get("itemName")
     url = item.get("affiliateUrl") or item.get("itemUrl")
-    if not name or not url:
+    if not name or not url or not _is_safe_url(url):
         return None
 
     images = item.get("mediumImageUrls") or []
@@ -78,6 +88,8 @@ def _to_product(raw: dict) -> Product | None:
         image = ""
     # 楽天の画像URLは末尾の _ex= でサイズが決まる。カード表示用に大きめを指定
     image = image.replace("?_ex=128x128", "?_ex=300x300")
+    if image and not _is_safe_url(image):
+        image = ""  # 画像は無くても記事は成立するので、URLを捨てるだけにする
 
     return Product(
         name=name,
