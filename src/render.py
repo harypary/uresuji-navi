@@ -116,6 +116,18 @@ def render_site(
     # ---- 静的アセット ----
     shutil.copytree(ROOT / "static", out_dir / "assets")
 
+    # ---- サイトルート直下に置くファイル ----
+    # Search Console の所有権確認ファイル(google*.html)や ads.txt など、
+    # 「必ずルート直下でなければならない」ものをここに入れる。
+    # docs/ は毎回作り直すので、生成物ではないファイルはこちらで管理する。
+    site_root = ROOT / "site_root"
+    if site_root.is_dir():
+        for item in site_root.iterdir():
+            if item.name.startswith(".") or not item.is_file():
+                continue
+            shutil.copy2(item, out_dir / item.name)
+            log.info("ルート直下に配置: %s", item.name)
+
     # Jekyll のビルドを止める。無いと _ 始まりのパスが404になることがある
     (out_dir / ".nojekyll").touch()
 
