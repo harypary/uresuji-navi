@@ -1,0 +1,16 @@
+version: 2
+updates:
+  # requirements.txt を完全固定した代償として、更新はDependabotに任せる。
+  # 固定しっぱなしで放置すると脆弱性が残り続けるため、これはセットで必要。
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  # GitHub Actions もSHA固定しているので同様に自動更新させる
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

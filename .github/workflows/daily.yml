@@ -28,14 +28,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # アクションはタグではなくコミットSHAで固定する。
+      # タグは付け替え可能なので、@v7 のままだと参照先の中身を差し替えられ得る。
+      # このジョブには楽天のアクセスキーが渡るため、実行するコードを固定しておく。
+      # 更新は .github/dependabot.yml が出すPRで行う（コメントのバージョンも追随する）
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
           cache: pip
 
-      - run: pip install -r requirements.txt
+      # 固定したバージョン以外を絶対に入れない
+      - run: pip install --no-deps -r requirements.txt
 
       - name: 楽天APIから記事を生成
         env:
@@ -47,8 +52,8 @@ jobs:
           GOOGLE_SITE_VERIFICATION: ${{ vars.GOOGLE_SITE_VERIFICATION }}
         run: python main.py
 
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: docs
 
@@ -60,4 +65,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
