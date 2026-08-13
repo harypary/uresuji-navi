@@ -15,7 +15,9 @@ on:
       - "main.py"
 
 permissions:
-  contents: read
+  # 価格履歴(data/price_history.json)をリポジトリに書き戻すため write が要る。
+  # CIは実行ごとに環境が消えるので、ここに残さないと履歴が積み上がらない
+  contents: write
   pages: write
   id-token: write
 
@@ -51,6 +53,20 @@ jobs:
           # 公開ページのmetaタグに出る値なので Secret ではなく Variable でよい
           GOOGLE_SITE_VERIFICATION: ${{ vars.GOOGLE_SITE_VERIFICATION }}
         run: python main.py
+
+      - name: 価格履歴をリポジトリに保存
+        run: |
+          if git diff --quiet -- data/; then
+            echo "価格変動なし。コミットをスキップします"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git commit -m "価格履歴を更新 $(date -u +%Y-%m-%d)"
+          # 別の実行が先にpushしていた場合に備えてrebaseしてから送る
+          git pull --rebase --autostash origin main
+          git push origin HEAD:main
 
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

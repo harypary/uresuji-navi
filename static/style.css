@@ -178,6 +178,17 @@ article h1 { font-size: 25px; line-height: 1.45; margin: 20px 0 8px; }
 .stars { color: #f5a623; letter-spacing: 1px; }
 .review-count { color: var(--ink-sub); font-size: 12px; }
 
+/* 価格履歴バッジ: 楽天の商品ページには無い情報なので目立たせる */
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.badge-drop   { background: #e8f5e9; color: #1b7a34; border: 1px solid #bfe3c6; }
+.badge-lowest { background: #fff3e0; color: #a35400; border: 1px solid #ffd9a0; }
+
 .caption { font-size: 13px; color: var(--ink-sub); margin: 0 0 8px; }
 .shop { font-size: 12px; color: var(--ink-sub); margin: 0 0 14px; }
 

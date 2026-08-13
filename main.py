@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 
 from src.articles import build_articles
 from src.demo import build_demo_articles
+from src.price_history import annotate
 from src.rakuten import RakutenAPIError, RakutenClient
 from src.render import render_site
 
@@ -77,6 +78,10 @@ def main() -> int:
     if not articles:
         logging.error("記事が1本も生成できませんでした。config/site.yaml を確認してください。")
         return 1
+
+    # 価格履歴の記録と注釈。デモはダミー価格なので履歴を汚さない
+    if not args.demo:
+        annotate(articles, ROOT / "data" / "price_history.json")
 
     render_site(
         articles,

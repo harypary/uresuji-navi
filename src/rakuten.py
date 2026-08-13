@@ -22,6 +22,10 @@ log = logging.getLogger(__name__)
 
 # バージョンはAPIごとに異なる。管理画面ではなく公式ドキュメントの記載に合わせること。
 # https://webservice.rakuten.co.jp/documentation
+# 「過去最安」と表示するのに最低限必要な観測日数。
+# 2日目に「過去最安！」と出しても嘘くさいだけなので、1週間は溜める
+MIN_DAYS_FOR_LOWEST = 7
+
 SEARCH_URL = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701"
 RANKING_URL = "https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601"
 GENRE_URL = "https://openapi.rakuten.co.jp/ichibagt/api/IchibaGenre/Search/20260701"
@@ -47,6 +51,34 @@ class Product:
     # 商品ごとの実際のアフィリエイト料率(%)。APIが返すのでジャンル単位の推定値より正確。
     # 0 の場合は設定ファイルの commission_rate にフォールバックする
     affiliate_rate: float = 0.0
+
+    # --- ここから下は price_history.py が書き込む。APIからは取れない情報 ---
+    prev_price: int = 0      # 前回観測時の価格(0なら比較対象なし)
+    lowest_price: int = 0    # 観測期間中の最安値
+    days_tracked: int = 0    # 観測日数
+
+    @property
+    def price_drop(self) -> int:
+        """前回観測比の値下がり額。値上がり・比較不能なら0。"""
+        if not self.prev_price:
+            return 0
+        return max(self.prev_price - self.price, 0)
+
+    @property
+    def price_drop_display(self) -> str:
+        return f"{self.price_drop:,}円"
+
+    @property
+    def is_lowest(self) -> bool:
+        """観測期間中の最安値かどうか。
+
+        観測日数が浅いうちは「最安」に意味が無いので出さない。
+        """
+        return (
+            self.days_tracked >= MIN_DAYS_FOR_LOWEST
+            and self.lowest_price > 0
+            and self.price <= self.lowest_price
+        )
 
     @property
     def price_display(self) -> str:

@@ -35,6 +35,12 @@
 
       <p class="meta">
         <span class="price">{{ p.price_display }}</span>
+        {# 楽天の商品ページには無い、毎日記録しているからこそ出せる情報 #}
+        {% if p.is_lowest %}
+        <span class="badge badge-lowest">過去{{ p.days_tracked }}日で最安</span>
+        {% elif p.price_drop %}
+        <span class="badge badge-drop">▼ {{ p.price_drop_display }}値下がり</span>
+        {% endif %}
         {% if p.review_count %}
         <span class="stars" title="{{ p.review_average }} / 5">
           {%- for i in range(5) %}{{ '★' if i < p.review_average|round(0, 'common')|int else '☆' }}{% endfor -%}
