@@ -22,13 +22,13 @@ log = logging.getLogger(__name__)
 
 # バージョンはAPIごとに異なる。管理画面ではなく公式ドキュメントの記載に合わせること。
 # https://webservice.rakuten.co.jp/documentation
-# 「過去最安」と表示するのに最低限必要な観測日数。
-# 2日目に「過去最安！」と出しても嘘くさいだけなので、1週間は溜める
-MIN_DAYS_FOR_LOWEST = 7
-
 SEARCH_URL = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701"
 RANKING_URL = "https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601"
 GENRE_URL = "https://openapi.rakuten.co.jp/ichibagt/api/IchibaGenre/Search/20260701"
+
+# 「過去最安」と表示するのに最低限必要な観測日数。
+# 2日目に「過去最安！」と出しても嘘くさいだけなので、1週間は溜める
+MIN_DAYS_FOR_LOWEST = 7
 
 
 class RakutenAPIError(RuntimeError):
@@ -52,10 +52,16 @@ class Product:
     # 0 の場合は設定ファイルの commission_rate にフォールバックする
     affiliate_rate: float = 0.0
 
+    # ポイント倍率。楽天は表示価格をほとんど動かさず、ここで実質価格を動かす。
+    # 通常1倍(=購入額の1%還元)で、キャンペーン中は5倍・10倍になる
+    point_rate: int = 1
+
     # --- ここから下は price_history.py が書き込む。APIからは取れない情報 ---
-    prev_price: int = 0      # 前回観測時の価格(0なら比較対象なし)
-    lowest_price: int = 0    # 観測期間中の最安値
-    days_tracked: int = 0    # 観測日数
+    prev_price: int = 0        # 前回観測時の価格(0なら比較対象なし)
+    lowest_price: int = 0      # 観測期間中の最安値
+    days_tracked: int = 0      # 観測日数
+    distinct_prices: int = 0   # 観測期間中に現れた価格の種類数
+    prev_point_rate: int = 0   # 前回観測時のポイント倍率
 
     @property
     def price_drop(self) -> int:
@@ -73,12 +79,34 @@ class Product:
         """観測期間中の最安値かどうか。
 
         観測日数が浅いうちは「最安」に意味が無いので出さない。
+        さらに一度も値動きしていない商品を「最安」と呼ぶのは誤解を招くため、
+        価格が2種類以上観測できている商品に限る。実測では楽天の表示価格は
+        ほとんど動かず、この条件が無いと全商品に最安バッジが付いてしまう。
         """
         return (
             self.days_tracked >= MIN_DAYS_FOR_LOWEST
+            and self.distinct_prices >= 2
             and self.lowest_price > 0
             and self.price <= self.lowest_price
         )
+
+    @property
+    def has_point_campaign(self) -> bool:
+        return self.point_rate >= 2
+
+    @property
+    def point_back(self) -> int:
+        """ポイント還元額の目安。倍率10倍=購入額の10%相当。"""
+        return self.price * self.point_rate // 100
+
+    @property
+    def effective_price_display(self) -> str:
+        return f"{self.price - self.point_back:,}円"
+
+    @property
+    def point_rate_up(self) -> bool:
+        """前回観測よりポイント倍率が上がったか(=お得になった)。"""
+        return bool(self.prev_point_rate) and self.point_rate > self.prev_point_rate
 
     @property
     def price_display(self) -> str:
@@ -134,6 +162,7 @@ def _to_product(raw: dict) -> Product | None:
         review_count=int(item.get("reviewCount") or 0),
         item_code=item.get("itemCode", ""),
         affiliate_rate=float(item.get("affiliateRate") or 0),
+        point_rate=int(item.get("pointRate") or 1),
     )
 
 

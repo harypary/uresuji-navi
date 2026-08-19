@@ -6,8 +6,10 @@
 {# GitHub Pages は独自レスポンスヘッダーを返せないため meta で指定する。
    このサイトは自前JSを一切持たないので script-src は 'none' でよい。
    万一テンプレートにスクリプトが混入しても実行されない保険になる。
-   JSON-LD(application/ld+json)はスクリプトとして実行されないので影響しない。 #}
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: data:; style-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+   JSON-LD(application/ld+json)はスクリプトとして実行されないので影響しない。
+   frame-ancestors は meta では無視される指定なので入れない(コンソールエラーになるだけ)。
+   GitHub Pages はレスポンスヘッダーを設定できないため、クリックジャッキング対策は不可。 #}
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: data:; style-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>{% block title %}{{ site.title }}{% endblock %}</title>
 <meta name="description" content="{% block description %}{{ site.description }}{% endblock %}">

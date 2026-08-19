@@ -1,9 +1,13 @@
 """商品価格の日次スナップショットを蓄積し、値下がり・最安値を判定する。
 
 このサイトが楽天市場そのものに対して持てる数少ない独自価値が「時間」。
-毎日データを取っているので、「先週より800円安い」「過去90日で最安」という
-情報を出せる。単発のAPIレスポンスからは絶対に作れない情報なので、
-自動生成のまま差別化できる数少ない方向になる。
+毎日データを取っているので、単発のAPIレスポンスからは絶対に作れない
+情報を出せる。自動生成のまま差別化できる数少ない方向になる。
+
+ただし実測では、楽天の「表示価格」はほとんど動かない
+(6日間の観測で174商品中1商品、0.6%しか変動しなかった)。
+実質的な値引きはポイント倍率で行われており、こちらは約19%の商品が
+2倍以上かつ全件が期間限定だった。そのため価格と倍率の両方を記録する。
 
 CIは実行ごとに環境が消えるため、履歴はリポジトリに書き戻して永続化する
 （.github/workflows/daily.yml のコミットステップ）。
@@ -76,16 +80,20 @@ def update(articles: list[Article], store: dict, today: date) -> dict:
             hist = rec["h"]
 
             # 同日に複数回実行されても履歴が二重にならないようにする
+            point = {"d": iso, "p": p.price, "r": p.point_rate}
             if not hist or hist[-1]["d"] != iso:
-                hist.append({"d": iso, "p": p.price})
+                hist.append(point)
             else:
-                hist[-1]["p"] = p.price
+                hist[-1] = point
 
-            # 今日より前の直近価格。無ければ比較しない
+            # 今日より前の直近観測。無ければ比較しない
             past = [pt for pt in hist if pt["d"] != iso]
             p.prev_price = past[-1]["p"] if past else 0
+            # "r" は途中で導入したキーなので、古い履歴には存在しない
+            p.prev_point_rate = past[-1].get("r", 0) if past else 0
             p.lowest_price = min(pt["p"] for pt in hist)
             p.days_tracked = len({pt["d"] for pt in hist})
+            p.distinct_prices = len({pt["p"] for pt in hist})
 
     _prune(store, today)
     return store
@@ -98,5 +106,12 @@ def annotate(articles: list[Article], path: Path, today: date | None = None) -> 
     update(articles, store, today)
     save(path, store)
 
-    tracked = sum(1 for a in articles for p in a.products if p.days_tracked > 1)
-    log.info("価格履歴: %d商品を追跡中(うち比較可能 %d件)", len(store), tracked)
+    prods = [p for a in articles for p in a.products]
+    log.info(
+        "価格履歴: %d商品を追跡中 / 比較可能 %d件 / 値下がり %d件 / 最安 %d件 / ポイント増 %d件",
+        len(store),
+        sum(1 for p in prods if p.days_tracked > 1),
+        sum(1 for p in prods if p.price_drop),
+        sum(1 for p in prods if p.is_lowest),
+        sum(1 for p in prods if p.point_rate_up),
+    )

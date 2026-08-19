@@ -35,11 +35,17 @@
 
       <p class="meta">
         <span class="price">{{ p.price_display }}</span>
-        {# 楽天の商品ページには無い、毎日記録しているからこそ出せる情報 #}
+        {# 楽天の商品ページには無い、毎日記録しているからこそ出せる情報。
+           表示価格はほとんど動かないので、実際にはポイント倍率のバッジが主役になる #}
         {% if p.is_lowest %}
         <span class="badge badge-lowest">過去{{ p.days_tracked }}日で最安</span>
         {% elif p.price_drop %}
         <span class="badge badge-drop">▼ {{ p.price_drop_display }}値下がり</span>
+        {% endif %}
+        {% if p.has_point_campaign %}
+        <span class="badge badge-point">
+          ポイント{{ p.point_rate }}倍{% if p.point_rate_up %}にUP{% endif %}
+        </span>
         {% endif %}
         {% if p.review_count %}
         <span class="stars" title="{{ p.review_average }} / 5">
@@ -48,6 +54,13 @@
         <span class="review-count">{{ p.review_count }}件のレビュー</span>
         {% endif %}
       </p>
+
+      {% if p.has_point_campaign %}
+      <p class="effective">
+        ポイント還元を含めた実質 <strong>{{ p.effective_price_display }}</strong>
+        <span class="note">（{{ p.point_back }}ポイント相当・期間限定）</span>
+      </p>
+      {% endif %}
 
       {% if p.short_caption %}<p class="caption">{{ p.short_caption }}</p>{% endif %}
       {% if p.shop %}<p class="shop">ショップ: {{ p.shop }}</p>{% endif %}
