@@ -44,7 +44,8 @@
         {% endif %}
         {% if p.has_point_campaign %}
         <span class="badge badge-point">
-          ポイント{{ p.point_rate }}倍{% if p.point_rate_up %}にUP{% endif %}
+          {%- if p.point_rate_up %}通常{{ p.base_point_rate }}倍→{% endif -%}
+          ポイント{{ p.point_rate }}倍
         </span>
         {% endif %}
         {% if p.review_count %}

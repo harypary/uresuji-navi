@@ -62,6 +62,7 @@ class Product:
     days_tracked: int = 0      # 観測日数
     distinct_prices: int = 0   # 観測期間中に現れた価格の種類数
     prev_point_rate: int = 0   # 前回観測時のポイント倍率
+    base_point_rate: int = 0   # 観測期間中の最低倍率(=キャンペーンのない平常時の値)
 
     @property
     def price_drop(self) -> int:
@@ -105,8 +106,14 @@ class Product:
 
     @property
     def point_rate_up(self) -> bool:
-        """前回観測よりポイント倍率が上がったか(=お得になった)。"""
-        return bool(self.prev_point_rate) and self.point_rate > self.prev_point_rate
+        """平常時より倍率が上がっているか(=キャンペーン期間中か)。
+
+        前日比で判定すると、倍率が上がったその1日しかバッジが出ず、
+        キャンペーンが続いている間ずっと無表示になる。実測でも
+        「08-21に1倍→10倍、08-22も10倍」で2日目に消えてしまった。
+        そのため観測期間中の最低倍率(平常時)と比較する。
+        """
+        return bool(self.base_point_rate) and self.point_rate > self.base_point_rate
 
     @property
     def price_display(self) -> str:

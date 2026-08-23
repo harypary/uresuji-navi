@@ -91,6 +91,8 @@ def update(articles: list[Article], store: dict, today: date) -> dict:
             p.prev_price = past[-1]["p"] if past else 0
             # "r" は途中で導入したキーなので、古い履歴には存在しない
             p.prev_point_rate = past[-1].get("r", 0) if past else 0
+            rates = [pt["r"] for pt in hist if "r" in pt]
+            p.base_point_rate = min(rates) if rates else 0
             p.lowest_price = min(pt["p"] for pt in hist)
             p.days_tracked = len({pt["d"] for pt in hist})
             p.distinct_prices = len({pt["p"] for pt in hist})
