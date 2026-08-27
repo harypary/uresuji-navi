@@ -17,10 +17,10 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
-from .articles import Article
+from .articles import JST, Article
 
 log = logging.getLogger(__name__)
 
@@ -102,8 +102,14 @@ def update(articles: list[Article], store: dict, today: date) -> dict:
 
 
 def annotate(articles: list[Article], path: Path, today: date | None = None) -> None:
-    """履歴の読み込み・更新・保存をまとめて行う。"""
-    today = today or date.today()
+    """履歴の読み込み・更新・保存をまとめて行う。
+
+    日付は必ずJSTで扱う。GitHub Actions のコンテナはUTCなので date.today() を
+    使うと、記事に表示される日付(JST)と履歴の日付(UTC)がズレる。さらに
+    スケジュール実行が遅延してUTCの日付をまたぐと履歴に穴が空く
+    (実際に 08-25T21:30Z と 08-27T00:32Z の実行で 08-26 が欠落した)。
+    """
+    today = today or datetime.now(JST).date()
     store = load(path)
     update(articles, store, today)
     save(path, store)
