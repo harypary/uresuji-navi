@@ -110,7 +110,7 @@ def render_site(
         out_dir / "privacy" / "index.html",
         env.get_template("privacy.html").render(**ctx, root="../"),
     )
-    for name in ("sitemap.xml", "feed.xml", "robots.txt"):
+    for name in ("sitemap.xml", "sitemap_index.xml", "feed.xml", "robots.txt"):
         _write(out_dir / name, env.get_template(name).render(**ctx, articles=articles))
 
     # ---- 静的アセット ----

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  サイトマップインデックス。
+  GSCに登録した /sitemap.xml の記録が「取得できませんでした」のまま
+  14日間一度も読み込まれなかったため、別ファイル名で新しい記録を
+  作れるようにしたもの。中身は sitemap.xml を指すだけ。
+-->
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>{{ base_url }}/sitemap.xml</loc>
+    <lastmod>{{ now.strftime('%Y-%m-%d') }}</lastmod>
+  </sitemap>
+</sitemapindex>
