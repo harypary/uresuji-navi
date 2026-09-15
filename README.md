@@ -156,6 +156,12 @@ copy .env.example .env                  # .env に取得した3つの値を記�
 python main.py
 ```
 
+テストを流すとき（楽天APIは叩かないので `.env` 不要）:
+
+```powershell
+python -m unittest discover -s tests -v
+```
+
 ジャンルIDを調べたいとき:
 
 ```powershell
@@ -241,6 +247,19 @@ python -m src.genres 100939   # そのジャンルの子ジャンル一覧
   **AdSenseや他社アフィリエイトをこのサイトに貼るのは規約違反**です。PVが増えても手を出さないこと
 - **運営主体の明示** — 第11条1項。「個人運営であり楽天グループとの提携関係はない」旨をフッターに記載済み
 - **楽天以外へのリンクを商品欄に置かない** — 第8条4項。商品カードのリンクは全て楽天向けにしてあります
+
+---
+
+### PRの自動チェック
+
+[.github/workflows/pr-check.yml](.github/workflows/pr-check.yml) が、Dependabot などの
+PRに対して `pip check`・単体テスト・デモデータでのサイト生成を自動で実行します。
+`daily.yml` は main への push とスケジュールでしか動かないため、これが無いと
+依存更新PRが一度もテストされないままマージされることになります。
+
+- トリガーは `pull_request_target` ではなく `pull_request`。前者はPR側のコードを
+  Secret 付きで実行でき、楽天のアクセスキーを抜かれる経路になるため使わない
+- 楽天APIは叩かないので Secret は不要。権限も `contents: read` のみ
 
 ---
 
