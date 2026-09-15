@@ -1,0 +1,52 @@
+name: PRチェック
+
+# Dependabot などのPRを、マージ前に自動で検証する。
+# daily.yml は main への push とスケジュールでしか動かないため、
+# これが無いと依存更新PRが一度もテストされないままマージされることになる。
+on:
+  # pull_request_target ではなく pull_request を使うこと。
+  # pull_request_target はPR側のコードを Secret 付きで実行できてしまい、
+  # 楽天のアクセスキーを外部に抜かれる経路になる。
+  # このジョブは楽天APIを叩かないので Secret は一切不要。
+  pull_request:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      # daily.yml と同じくコミットSHAで固定する(更新は Dependabot に任せる)
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: 固定した依存だけを入れる
+        run: pip install --no-deps -r requirements.txt
+
+      # --no-deps で入れているので、推移的依存の書き漏れや
+      # バージョンの食い違いはここでしか検出できない
+      - name: 依存関係の整合性
+        run: pip check
+
+      - name: 単体テスト
+        run: python -m unittest discover -s tests -v
+
+      - name: デモデータでサイト全体を生成
+        run: |
+          python main.py --demo --out _site_check
+          test "$(ls _site_check/articles | wc -l)" -ge 1
+          for f in index.html sitemap.xml sitemap_index.xml feed.xml robots.txt; do
+            test -s "_site_check/$f" || { echo "::error::$f が生成されていない"; exit 1; }
+          done
